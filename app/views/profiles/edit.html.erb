@@ -1,0 +1,119 @@
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <h1 class="mb-4"><%= @profile.new_record? ? "Build your Profile" : "Edit Profile" %></h1>
+
+      <%= form_with model: @profile, url: profile_path, method: @profile.new_record? ? :post : :patch do |f| %>
+
+        <%# Validation errors %>
+        <% if @profile.errors.any? %>
+          <div class="alert alert-danger mb-4">
+            <strong>Please fix the following:</strong>
+            <ul class="mb-0 mt-1">
+              <% @profile.errors.full_messages.each do |msg| %>
+                <li><%= msg %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <%# Life context — required %>
+        <div class="mb-4">
+          <%= f.label :life_context, "Life context *", class: "form-label fw-semibold" %>
+          <%= f.text_area :life_context, rows: 4,
+              class: "form-control #{"is-invalid" if @profile.errors[:life_context].any?}",
+              placeholder: "Career stage, life stage, recent transitions. What is the broad context of your life right now?" %>
+          <div class="form-text">Required. Be specific — the AI uses this to choose communities that fit your actual situation, not a generic version of it.</div>
+          <% if @profile.errors[:life_context].any? %>
+            <div class="invalid-feedback"><%= @profile.errors[:life_context].first %></div>
+          <% end %>
+        </div>
+
+        <%# Family situation %>
+        <div class="mb-4">
+          <%= f.label :family_situation, "Family situation", class: "form-label fw-semibold" %>
+          <%= f.text_area :family_situation, rows: 3,
+              class: "form-control #{"is-invalid" if @profile.errors[:family_situation].any?}",
+              placeholder: "Household composition, dependents, caregiving responsibilities." %>
+          <div class="form-text">Optional. Helps identify family and education Rings that fit your actual household.</div>
+        </div>
+
+        <%# Neighborhood %>
+        <div class="mb-4">
+          <%= f.label :neighborhood, "Neighborhood", class: "form-label fw-semibold" %>
+          <%= f.text_area :neighborhood, rows: 3,
+              class: "form-control #{"is-invalid" if @profile.errors[:neighborhood].any?}",
+              placeholder: "Where you live, the type of place (urban, suburban, rural), how long you have been there." %>
+          <div class="form-text">Optional. Named streets, local landmarks, or community names are helpful.</div>
+        </div>
+
+        <%# Work / occupation %>
+        <div class="mb-4">
+          <%= f.label :work_occupation, "Work or main occupation", class: "form-label fw-semibold" %>
+          <%= f.text_area :work_occupation, rows: 3,
+              class: "form-control #{"is-invalid" if @profile.errors[:work_occupation].any?}",
+              placeholder: "What you do for work, where, and in what kind of setting (remote, in-person, self-employed, etc.)." %>
+          <div class="form-text">Optional. Helps identify workplace and professional Rings.</div>
+        </div>
+
+        <%# Interests %>
+        <div class="mb-4">
+          <%= f.label :interests, "Hobbies and interests", class: "form-label fw-semibold" %>
+          <%= f.text_area :interests, rows: 3,
+              class: "form-control #{"is-invalid" if @profile.errors[:interests].any?}",
+              placeholder: "Recreational pursuits, clubs, online communities, learning interests." %>
+          <div class="form-text">Optional. Lists are fine: "trail running, board games, local history."</div>
+        </div>
+
+        <%# Values %>
+        <div class="mb-4">
+          <%= f.label :values, "Values", class: "form-label fw-semibold" %>
+          <%= f.text_area :values, rows: 3,
+              class: "form-control #{"is-invalid" if @profile.errors[:values].any?}",
+              placeholder: "What kinds of contributions matter to you? Causes, places, kinds of people you want to invest in." %>
+          <div class="form-text">Optional. Used to identify priority Rings and set Initiative goals.</div>
+        </div>
+
+        <%# Weekly hours — required %>
+        <div class="mb-4">
+          <%= f.label :weekly_hours, "Weekly hours available *", class: "form-label fw-semibold" %>
+          <%= f.number_field :weekly_hours, min: 1, max: 40,
+              class: "form-control #{"is-invalid" if @profile.errors[:weekly_hours].any?}",
+              placeholder: "1–40" %>
+          <div class="form-text">Required. How many hours per week can you realistically spend on community contribution? Be honest — this shapes what Initiatives the AI suggests.</div>
+          <% if @profile.errors[:weekly_hours].any? %>
+            <div class="invalid-feedback"><%= @profile.errors[:weekly_hours].first %></div>
+          <% end %>
+        </div>
+
+        <%# Known rings %>
+        <div class="mb-4">
+          <%= f.label :known_rings, "Communities you already know you want on the map", class: "form-label fw-semibold" %>
+          <%= f.text_area :known_rings, rows: 3,
+              class: "form-control #{"is-invalid" if @profile.errors[:known_rings].any?}",
+              placeholder: "e.g. Cedar Street block, Lincoln Elementary PTA, Tuesday running club" %>
+          <div class="form-text">Optional. Name specific groups, clubs, or gatherings. The AI will include them and may add others you did not mention.</div>
+        </div>
+
+        <%# Taxonomy reference collapse %>
+        <div class="mb-4">
+          <a class="text-muted small" data-bs-toggle="collapse" href="#ring-taxonomy" role="button">
+            What kinds of communities count? ▾
+          </a>
+          <div class="collapse mt-2" id="ring-taxonomy">
+            <%= render "shared/ring_taxonomy" %>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2">
+          <%= f.submit @profile.new_record? ? "Build Profile" : "Save Profile",
+              class: "btn btn-accent" %>
+          <% unless @profile.new_record? %>
+            <%= link_to "Cancel", profile_path, class: "btn btn-outline-secondary" %>
+          <% end %>
+        </div>
+
+      <% end %>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,9 @@
+<%= turbo_stream.remove "ring-#{@ring.id}" %>
+<%= turbo_stream.update "flash" do %>
+  <div class="alert alert-warning alert-dismissible fade show">
+    Ring removed.
+    <%= link_to "Regenerate overlaps", regenerate_overlaps_ring_map_path(@ring_map), data: { turbo_method: :post }, class: "alert-link" %>
+    after editing Rings to keep your Overlap list accurate.
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+<% end %>

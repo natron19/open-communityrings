@@ -1,0 +1,22 @@
+<div class="card mb-3 initiative-card">
+  <div class="card-body">
+    <div class="mb-3">
+      <span class="text-uppercase text-muted small fw-semibold">Goal</span>
+      <p class="mb-0"><%= initiative.goal %></p>
+    </div>
+    <div class="mb-3">
+      <span class="text-uppercase text-muted small fw-semibold">Activities</span>
+      <% initiative.activities.split("\n").reject(&:blank?).each do |activity| %>
+        <p class="mb-1 small"><%= activity %></p>
+      <% end %>
+    </div>
+    <div class="mb-3">
+      <span class="text-uppercase text-muted small fw-semibold">Expected Outcomes</span>
+      <p class="mb-0"><%= initiative.expected_outcomes %></p>
+    </div>
+    <div class="next-step-cell p-2 rounded">
+      <span class="text-uppercase text-muted small fw-semibold">Next Step</span>
+      <p class="mb-0"><%= initiative.next_step %></p>
+    </div>
+  </div>
+</div>

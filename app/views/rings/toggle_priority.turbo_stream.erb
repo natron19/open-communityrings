@@ -1,0 +1,3 @@
+<%= turbo_stream.update "ring-priority-#{@ring.id}" do %>
+  <%= render "ring_maps/ring_priority_cell", ring: @ring %>
+<% end %>

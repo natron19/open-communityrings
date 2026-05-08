@@ -1,0 +1,9 @@
+<%= turbo_stream.update "ring-#{@ring.id}" do %>
+  <%= render "ring_maps/ring", ring: @ring %>
+<% end %>
+<%= turbo_stream.update "flash" do %>
+  <div class="alert alert-success alert-dismissible fade show">
+    Ring updated.
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+<% end %>

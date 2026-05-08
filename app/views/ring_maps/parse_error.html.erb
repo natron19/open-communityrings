@@ -1,0 +1,12 @@
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="alert alert-warning">
+        <h5>We could not read the AI response.</h5>
+        <p>The AI returned a response that could not be parsed. This sometimes happens — please try again.</p>
+        <%= button_to "Try again", ring_maps_path, method: :post, class: "btn btn-accent" %>
+        <%= link_to "Go to dashboard", dashboard_path, class: "btn btn-outline-secondary ms-2" %>
+      </div>
+    </div>
+  </div>
+</div>

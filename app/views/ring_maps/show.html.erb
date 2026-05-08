@@ -1,0 +1,138 @@
+<%# Build the data arrays for the Stimulus SVG controller %>
+<% rings_data = @rings.map { |r| { id: r.id, name: r.name, ring_type: r.ring_type, description: r.description, rationale: r.rationale, is_priority: r.is_priority, position: r.position } } %>
+<% overlaps_data = @overlaps.map { |o| { ring_a_id: o.ring_a_id, ring_b_id: o.ring_b_id } } %>
+
+<div class="container py-4">
+
+  <%# 1. Header strip %>
+  <div class="d-flex justify-content-between align-items-start mb-3">
+    <div>
+      <h1>Your Ring Map</h1>
+      <p class="text-muted small mb-0">
+        Generated <%= @ring_map.generated_at.strftime("%B %-d, %Y at %-I:%M %p") %>
+        <% if @ring_map.overlaps_regenerated_at.present? %>
+          &middot; Overlaps updated <%= @ring_map.overlaps_regenerated_at.strftime("%B %-d, %Y") %>
+        <% end %>
+      </p>
+    </div>
+    <div class="d-flex gap-2">
+      <%= button_to "Regenerate overlaps", regenerate_overlaps_ring_map_path(@ring_map),
+          method: :post,
+          class: "btn btn-sm btn-outline-secondary",
+          data: { turbo_submits_with: "Regenerating…" } %>
+      <%= link_to "✕", ring_map_path(@ring_map),
+          data: { turbo_method: :delete, turbo_confirm: "Delete this Ring map? This cannot be undone." },
+          class: "btn btn-sm btn-outline-danger",
+          title: "Delete this map" %>
+    </div>
+  </div>
+
+  <%# 2. The SVG Ring map %>
+  <div class="card mb-3"
+       data-controller="ring-map"
+       data-ring-map-rings-value="<%= rings_data.to_json %>"
+       data-ring-map-overlaps-value="<%= overlaps_data.to_json %>">
+    <div class="card-body p-2" data-ring-map-target="canvas">
+      <p class="text-muted text-center small py-4 mb-0">Loading Ring map…</p>
+    </div>
+    <div class="card-footer text-center">
+      <p class="text-muted small fst-italic mb-0">This is a draft to argue with, not a verdict to follow.</p>
+    </div>
+  </div>
+
+  <%# AI interpretation disclaimer %>
+  <p class="text-muted small fst-italic mb-3">Ring types and overlaps are AI interpretations; rename, retype, or drop anything that does not match how you see your communities.</p>
+
+  <%# 3. Ring list %>
+  <div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Your Rings (<%= @rings.count %>)</h5>
+    </div>
+    <ul class="list-group list-group-flush" id="ring-list">
+      <% @rings.each do |ring| %>
+        <%= render "ring_maps/ring", ring: ring %>
+      <% end %>
+    </ul>
+    <div class="card-footer">
+      <a class="btn btn-outline-secondary btn-sm" data-bs-toggle="collapse" href="#add-ring-collapse" role="button">
+        + Add a Ring
+      </a>
+      <div class="collapse mt-3" id="add-ring-collapse">
+        <div id="add-ring-form">
+          <%= turbo_frame_tag "add-ring-frame" do %>
+            <%= render "rings/form", ring: Ring.new, ring_map: @ring_map %>
+          <% end %>
+          <div id="ring-form-errors"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%# 4. Overlap list %>
+  <div class="card mb-4" id="overlap-list">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Overlaps (<%= @overlaps.count %>)</h5>
+      <%= button_to "Regenerate overlaps", regenerate_overlaps_ring_map_path(@ring_map),
+          method: :post,
+          class: "btn btn-sm btn-outline-secondary",
+          data: { turbo_submits_with: "Regenerating…" } %>
+    </div>
+    <div class="card-body">
+      <% if @overlaps.any? %>
+        <% @overlaps.each do |overlap| %>
+          <%= render "ring_maps/overlap", overlap: overlap %>
+        <% end %>
+      <% else %>
+        <p class="text-muted small mb-0">No overlaps found. Edit your Rings and regenerate to find connections.</p>
+      <% end %>
+    </div>
+  </div>
+
+  <%# 5. Starter Initiatives %>
+  <% if @priority_rings.any? %>
+    <div class="card mb-4" id="starter-initiatives">
+      <div class="card-header">
+        <h5 class="mb-0">Starter Initiatives</h5>
+      </div>
+      <div class="card-body">
+        <% @priority_rings.each do |ring| %>
+          <% if ring.starter_initiatives.any? %>
+            <h6 class="mt-3 mb-2">
+              <%= ring.name %> <%= ring_type_badge(ring.ring_type) %>
+            </h6>
+            <% ring.starter_initiatives.each do |initiative| %>
+              <%= render "ring_maps/starter_initiative", initiative: initiative %>
+            <% end %>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <%# 6. Raw response toggle %>
+  <div class="mb-4">
+    <a class="text-muted small" data-bs-toggle="collapse" href="#raw-response" role="button">
+      Show raw response (advanced) ▾
+    </a>
+    <div class="collapse mt-2" id="raw-response">
+      <% if @ring_map.gemini_raw.present? %>
+        <p class="small text-muted mb-1 fw-semibold">ring_discovery_v1 — <%= @ring_map.generated_at.strftime("%B %-d, %Y at %-I:%M %p") %></p>
+        <pre class="small bg-dark border rounded p-3" style="overflow-x:auto;max-height:400px;"><%= @ring_map.gemini_raw %></pre>
+      <% end %>
+      <% if @ring_map.gemini_raw_overlaps.present? %>
+        <p class="small text-muted mb-1 fw-semibold mt-3">overlap_regeneration_v1 — <%= @ring_map.overlaps_regenerated_at&.strftime("%B %-d, %Y at %-I:%M %p") %></p>
+        <pre class="small bg-dark border rounded p-3" style="overflow-x:auto;max-height:300px;"><%= @ring_map.gemini_raw_overlaps %></pre>
+      <% end %>
+    </div>
+  </div>
+
+  <%# 7. Footer actions %>
+  <div class="d-flex gap-2">
+    <%= link_to "Edit my Profile", edit_profile_path, class: "btn btn-outline-secondary" %>
+    <%= button_to "Start a fresh map", ring_maps_path, method: :post,
+        class: "btn btn-accent",
+        data: { turbo_confirm: "This will generate a new Ring map. Your current map will not be deleted but will no longer be the latest. Continue?",
+                turbo_submits_with: "Running…" } %>
+  </div>
+
+</div>
