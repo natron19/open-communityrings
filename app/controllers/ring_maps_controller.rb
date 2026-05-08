@@ -62,7 +62,7 @@ class RingMapsController < ApplicationController
       variables: { rings_text: rings_text }
     )
 
-    data = JSON.parse(result)
+    data = JSON.parse(strip_json_fences(result))
     position_to_ring = rings.index_by(&:position)
 
     ActiveRecord::Base.transaction do
@@ -105,6 +105,10 @@ class RingMapsController < ApplicationController
 
   private
 
+  def strip_json_fences(text)
+    text.gsub(/\A```(?:json)?\s*/m, "").gsub(/\s*```\z/m, "").strip
+  end
+
   def load_profile
     @profile = current_user.profile
     render file: Rails.public_path.join("404.html"), status: :not_found unless @profile
@@ -116,7 +120,7 @@ class RingMapsController < ApplicationController
   end
 
   def persist_ring_map!(json_string, profile)
-    data = JSON.parse(json_string)
+    data = JSON.parse(strip_json_fences(json_string))
 
     ActiveRecord::Base.transaction do
       ring_map = profile.ring_maps.create!(
