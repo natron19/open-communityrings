@@ -1,0 +1,24 @@
+# Per-app guardrail configuration, read by AiGuardConfig.
+# See docs/ai-guardrails.md (Layer 1b: AiOutputGuard) and docs/ai-evals.md.
+
+# Community mapping, not personal support; no crisis terms configured.
+crisis_terms: []
+
+# Output structure rules per AiTemplate name. Templates not listed get the
+# generic output checks only (non-empty, no prompt leak, no profanity, no new PII).
+#   format:        text | json
+#   required_keys: top-level keys the JSON object must contain
+templates:
+  health_ping:
+    format: text
+  # RingMapsController#persist_ring_map! builds the map from data["rings"].
+  # overlaps and starter_initiatives fall back to [] in the controller, so they
+  # are not required here.
+  ring_discovery_v1:
+    format: json
+    required_keys: [rings]
+  # RingMapsController#regenerate_overlaps destroys the old Overlaps and rebuilds
+  # them from data["overlaps"]; zero overlaps is valid, but the key must be present.
+  overlap_regeneration_v1:
+    format: json
+    required_keys: [overlaps]

@@ -27,16 +27,16 @@ class RingMapsController < ApplicationController
 
   rescue GeminiService::BudgetExceededError
     flash.now[:alert] = "You have reached your daily AI call limit. Try again tomorrow."
-    render partial: "shared/ai_error", locals: { error_type: :budget_exceeded }, status: :unprocessable_entity
+    render "shared/ai_error_page", locals: { error_type: :budget_exceeded }, status: :unprocessable_entity
   rescue GeminiService::GatekeeperError
     flash.now[:alert] = "Your Profile contained content that could not be sent to the AI."
-    render partial: "shared/ai_error", locals: { error_type: :gatekeeper_blocked }, status: :unprocessable_entity
+    render "shared/ai_error_page", locals: { error_type: :gatekeeper_blocked }, status: :unprocessable_entity
   rescue GeminiService::TimeoutError
     flash.now[:alert] = "The AI took too long to respond. Please try again."
-    render partial: "shared/ai_error", locals: { error_type: :timeout }, status: :unprocessable_entity
+    render "shared/ai_error_page", locals: { error_type: :timeout }, status: :unprocessable_entity
   rescue GeminiService::GeminiError
     flash.now[:alert] = "Something went wrong with the AI call. Please try again."
-    render partial: "shared/ai_error", locals: { error_type: :error }, status: :unprocessable_entity
+    render "shared/ai_error_page", locals: { error_type: :error }, status: :unprocessable_entity
   rescue JSON::ParserError
     flash.now[:alert] = "We could not parse the AI response. Please try again."
     render template: "ring_maps/parse_error", status: :unprocessable_entity
