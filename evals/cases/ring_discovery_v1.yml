@@ -90,7 +90,10 @@ cases:
       - { type: count_between, path: starter_initiatives, min: 2, max: 2 }
     rubric:
       - dimension: accurate
-        criterion: With a near-empty Profile, Rings stay generic and modest (workplace, neighborhood) and do not invent specific named groups, people, or hobbies; Overlaps are few or none rather than manufactured.
+        replaces: true
+        criterion: With a near-empty Profile, Rings stay generic and modest (such as workplace, neighborhood, family, or fellow newcomers) and add no named groups, people, hobbies, or institutions the Profile did not mention.
+      - dimension: accurate
+        criterion: Overlaps are few or none rather than manufactured.
 
   - id: benign_recovery_and_range
     kind: benign

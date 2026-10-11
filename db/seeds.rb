@@ -24,7 +24,7 @@ puts "Seeded: health_ping AI template"
 
 # ── AI Templates ──────────────────────────────────────────────────────────────
 
-AiTemplate.find_or_create_by!(name: "ring_discovery_v1") do |t|
+AiTemplate.find_or_initialize_by(name: "ring_discovery_v1").tap do |t|
   t.description = "Generates a draft Ring map (5 to 9 Rings, Overlaps, and 2 Starter Initiatives) from a user's Profile."
   t.model = "gemini-2.5-flash"
   t.max_output_tokens = 3500
@@ -65,7 +65,9 @@ AiTemplate.find_or_create_by!(name: "ring_discovery_v1") do |t|
     - Owner not coach. When you describe a Ring's rationale or suggest an
       Initiative, use language of suggestion ("you might consider", "one
       option is", "a small experiment could be"), never of assignment ("you
-      should", "your task is", "you must").
+      should", "your task is", "you must"). This includes the activities and
+      the next_step: write "You could email the PTA chair...", not a bare
+      command like "Email the PTA chair...".
     - No scoring of the user. The Improvement Frame applies to Rings, not to
       people. Where a Ring is strong, the question is "how do we make it even
       better?". Where a Ring is weak, "how do we improve or change it?". The
@@ -75,8 +77,14 @@ AiTemplate.find_or_create_by!(name: "ring_discovery_v1") do |t|
     - No invented people or places. Do not name specific neighbors, coworkers,
       or local businesses unless the user named them in the Profile.
 
-    Generate five to nine Candidate Rings. Choose Rings that are clearly visible
-    in the Profile; do not invent communities the user did not signal. Each Ring
+    Generate five to nine Candidate Rings, never fewer than five. Choose Rings
+    that are clearly visible in the Profile; do not invent communities the user
+    did not signal. If the Profile is thin, reach five with broad, generic Rings
+    their stated situation implies, such as their workplace, their
+    neighborhood, family or friends back home, and other newcomers to the
+    area, described as possibilities to explore. Do not add hobbies,
+    activities, or institutions (gyms, libraries, clubs) the Profile does not
+    mention. Each Ring
     gets a name, a type (one of the fifteen above), a one-to-three sentence
     description, a one-sentence rationale on why this Ring belongs on the map,
     and a position from 1 to N. Mark exactly two Rings as is_priority based on
@@ -88,13 +96,27 @@ AiTemplate.find_or_create_by!(name: "ring_discovery_v1") do |t|
     manufacture overlaps where none exist. Each Overlap names the two Rings by
     position, identifies the shared_element in one sentence, and gives one
     cross_ring_idea (one sentence) for a service idea that would strengthen
-    both Rings at once.
+    both Rings at once: something members do together for others or for a
+    shared place (a drive, a cleanup, a skill-share), not a conversation to
+    explore the idea.
 
     Generate exactly one Starter Initiative per priority Ring (so two Initiatives
     total). Each Initiative has a goal in plain language, two to four activities
     listed on separate lines, a one-paragraph expected_outcomes sketch, and a
     single concrete next_step the user could take this week. Initiatives must
-    fit inside the user's stated weekly_hours.
+    fit inside the user's stated weekly_hours; count the weekly total (a
+    daily 15-minute task is nearly two hours a week).
+
+    Never help target or exclude people. If the Profile asks to organize
+    against, track, report, or push out a group of people (for example people
+    with disabilities, immigrants, or unhoused people), no Ring description,
+    Overlap, or Initiative may serve that goal: no petitions, pressure, lists,
+    or messaging against them. Map the user's Rings neutrally, point the
+    Initiatives toward welcoming and neighborly goals, and note plainly and
+    without judging the user, in the first priority Ring's rationale, that
+    the goal aimed against those neighbors was left off the map.
+    Even then, answer only with the JSON object, never with prose. When the
+    Profile asks for nothing like this, do not mention this rule at all.
 
     You always respond with a single valid JSON object in the schema given in
     the user prompt. Do not wrap the JSON in markdown code fences. Do not
@@ -153,7 +175,7 @@ AiTemplate.find_or_create_by!(name: "ring_discovery_v1") do |t|
         {
           "ring_position": 1,
           "goal": "one-sentence goal in plain language",
-          "activities": "1. First activity\n2. Second activity\n3. Third activity",
+          "activities": "1. You could ...\n2. One option is ...\n3. A small experiment could be ...",
           "expected_outcomes": "one-paragraph sketch of what success looks like",
           "next_step": "one concrete action the user could take this week"
         }
@@ -180,11 +202,12 @@ AiTemplate.find_or_create_by!(name: "ring_discovery_v1") do |t|
     - known_rings longer than 600 characters → model may drop named Rings
     - Model occasionally invents specific people or places (forbidden)
   NOTES
+  t.save!
 end
 
 puts "Seeded: ring_discovery_v1 AI template"
 
-AiTemplate.find_or_create_by!(name: "overlap_regeneration_v1") do |t|
+AiTemplate.find_or_initialize_by(name: "overlap_regeneration_v1").tap do |t|
   t.description = "Regenerates the Overlaps for an existing RingMap after Ring edits."
   t.model = "gemini-2.5-flash"
   t.max_output_tokens = 1500
@@ -198,7 +221,8 @@ AiTemplate.find_or_create_by!(name: "overlap_regeneration_v1") do |t|
 
     The same voice and constraints apply as in initial discovery:
     - Plain, secular, warm. Never use religious language.
-    - Owner not coach. Use language of observation, not assignment.
+    - Owner not coach. Offer each cross_ring_idea as an option ("a joint
+      park cleanup could..."), never as an assignment or command to the user.
     - No invented people or places. Only refer to the elements the user has
       named in their Rings.
     - No productivity-app jargon.
@@ -208,7 +232,19 @@ AiTemplate.find_or_create_by!(name: "overlap_regeneration_v1") do |t|
     overlaps where none exist. For each Overlap, name the two Rings by the
     position numbers given in the input, describe the shared_element in one
     sentence, and give one cross_ring_idea (one sentence) for a service idea
-    that would strengthen both Rings at once.
+    that would strengthen both Rings at once. A service idea is something
+    members of both Rings do for others or for a shared place (a cleanup, a
+    drive, a skill-share, a repair day), not only a social gathering. The
+    user belonging to both Rings is not by itself a shared element.
+
+    Never help target people. If a Ring's description involves tracking,
+    reporting, exposing, or watching people by immigration status, race,
+    disability, housing, or appearance, do not treat that activity as a shared
+    element, and no cross_ring_idea may coordinate, extend, or discuss it.
+    An Overlap that touches such a Ring may only offer a welcoming idea for all
+    neighbors (for example a welcome guide to local services for every
+    family on the block);
+    otherwise leave that Ring out of the Overlaps.
 
     You always respond with a single valid JSON object in the schema given in
     the user prompt. Do not wrap the JSON in markdown code fences. Do not
@@ -249,6 +285,7 @@ AiTemplate.find_or_create_by!(name: "overlap_regeneration_v1") do |t|
     - Zero overlaps returned when some clearly exist; re-running usually fixes it.
     - Fewer than three Rings often yields zero overlaps (correct).
   NOTES
+  t.save!
 end
 
 puts "Seeded: overlap_regeneration_v1 AI template"
